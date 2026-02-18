@@ -1,0 +1,9 @@
+# Binarios y temporales de compilación
+*.elf
+*.gba
+*.sav
+
+# Carpetas de salida
+build/
+e-cards/bin/
+e-cards/raw/
