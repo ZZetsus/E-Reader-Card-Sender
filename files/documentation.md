@@ -20,10 +20,6 @@ Little-Endian: `0x78563412`
 
 # Encoding Layers
 
-## Credits & Tools
-* **Decompression:** Card decompression was performed using the `nedcmake` / `nedcenc` tools created by [caitsith2](https://www.caitsith2.com/ereader/devtools.htm/).
-* **Encoding:** The Layer 1 and Layer 2 obfuscation logic was reverse-engineered from the Pokémon Colosseum.
-
 ### Layer 0: Bin Data
 This layer consists of the pure, decompressed card data without any modifications.
 
@@ -69,4 +65,9 @@ Card Data (Layer 0-2): 1,038 iterations (Indices 0 to 1037).
 Checksum: 1 iteration (Indices 1037 to 1038).
 
 Challenge 4-Bytes: 1 iteration (Indices 1038 to 1039).
+
+## Credits & Tools
+* **Decompression:** Card decompression was performed using the `nedcmake` / `nedcenc` tools created by [caitsith2](https://www.caitsith2.com/ereader/devtools.htm/).
+
+
 
