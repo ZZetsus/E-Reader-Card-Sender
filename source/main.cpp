@@ -86,8 +86,8 @@ uint8_t index_array;
 uint32_t _JOY_RECV_LOCAL_L;
 uint32_t _JOY_RECV_LOCAL_H;
 
-uint32_t CHALLENGE_BYTE = crc32Table_4bytes[(MASK ^ 0x00000000) & 0xFF];
-uint32_t new_mask = MASK >> 8 ^ CHALLENGE_BYTE;
+uint32_t CRC32BYTE = crc32Table_4bytes[(MASK ^ 0x00000000) & 0xFF];
+uint32_t new_mask = MASK >> 8 ^ CRC32BYTE;
 
 uint32_t next_data_L = 0;
 uint32_t next_data_H = 0;
@@ -163,7 +163,7 @@ IWRAM_CODE void prepare_word() {
 
         real_4byte = (card_4byte ^
                     (new_mask << 0x18 | 
-                    (new_mask & 0xFF00) << 8 | CHALLENGE_BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8)) ^ GC_TICK;
+                    (new_mask & 0xFF00) << 8 | CRC32BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8)) ^ GC_TICK;
 
         next_data_L = ((((real_4byte >> 16) & 0xFFFF) >> 8) & 0x00FF) | ((((real_4byte >> 16) & 0xFFFF) << 8) & 0xFF00);
         next_data_H = (((real_4byte & 0xFFFF) >> 8) & 0x00FF) | (((real_4byte & 0xFFFF) << 8) & 0xFF00);
@@ -181,7 +181,7 @@ IWRAM_CODE void prepare_word() {
         card_4byte = 0x00000000;
         real_4byte = (card_4byte ^
                     (new_mask << 0x18 | 
-                    (new_mask & 0xFF00) << 8 | CHALLENGE_BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8)) ^ GC_TICK;
+                    (new_mask & 0xFF00) << 8 | CRC32BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8)) ^ GC_TICK;
                     
         next_data_L = ((((real_4byte >> 16) & 0xFFFF) >> 8) & 0x00FF) | ((((real_4byte >> 16) & 0xFFFF) << 8) & 0xFF00);
         next_data_H = (((real_4byte & 0xFFFF) >> 8) & 0x00FF) | (((real_4byte & 0xFFFF) << 8) & 0xFF00);
@@ -196,7 +196,7 @@ IWRAM_CODE void prepare_word() {
 
         real_4byte = (crc32_card ^
                     (new_mask << 0x18 | 
-                    (new_mask & 0xFF00) << 8 | CHALLENGE_BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8)) ^ GC_TICK;
+                    (new_mask & 0xFF00) << 8 | CRC32BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8)) ^ GC_TICK;
 
         next_data_L = ((((real_4byte >> 16) & 0xFFFF) >> 8) & 0x00FF) | ((((real_4byte >> 16) & 0xFFFF) << 8) & 0xFF00);
         next_data_H = (((real_4byte & 0xFFFF) >> 8) & 0x00FF) | (((real_4byte & 0xFFFF) << 8) & 0xFF00);
