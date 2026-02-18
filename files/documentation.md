@@ -60,14 +60,15 @@ C++
 Byte4_Layer2 = Byte4_Layer1 ^ GC_TICK;
 ```
 Communication Flow Summary
-Card Data (Layer 0-2): 1,038 iterations (Indices 0 to 1037).
+Card Data (Layer 0-2): 1038 iterations (Indices 0 to 1037).
 
 Checksum: 1 iteration (Indices 1037 to 1038).
 
 Challenge 4-Bytes: 1 iteration (Indices 1038 to 1039).
 
 ## Credits & Tools
-* **Decompression:** Card decompression was performed using the `nedcmake` / `nedcenc` tools created by [caitsith2](https://www.caitsith2.com/ereader/devtools.htm/).
+* **Decompression:** Card decompression was performed using the `nedcmake` tools created by [caitsith2](https://www.caitsith2.com/ereader/devtools.htm/).
+
 
 
 
