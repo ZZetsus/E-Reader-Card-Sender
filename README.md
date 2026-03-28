@@ -4,7 +4,7 @@ It is a project to send data from Japanese e-reader+ Pokémon Colosseum Cards on
 ## *Note: You don't need a flashcart to run the ROM; you can use a GC/Wii program to send it via multiboot.*
 
 ### Usage
-1. **Place the `.raw` files in `e-cards/raw/`** *(Recommendation: use short filenames for easier processing).*
+1. **Place the `.raw` files in `e-cards/raw/`** *(Recommendation: use short filenames).*
 2. **Run the `Configure.py` script** located in the project root.
 3. **Open a terminal in the project root and run `make`** *(You must have devKitARM installed).*
 
