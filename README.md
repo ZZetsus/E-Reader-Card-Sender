@@ -8,8 +8,10 @@ It is a project to send data from Japanese e-reader+ Pokémon Colosseum Cards on
 3. **Open a terminal in the project root and run `make`** *(You must have devKitARM installed).*
 
 
-# Images
+# Resources
 <img width="1096" height="511" alt="image" src="https://github.com/user-attachments/assets/64d00cb5-9f6a-4e20-a4d2-566391f9b4d3" />
 
-Video
+Video first prototype:
 https://youtu.be/ARFF_fLZ07Q?si=1lyLkfLMjmceFqI5
+
+Testing the first version on original hardware:
