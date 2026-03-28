@@ -18,5 +18,5 @@ https://youtu.be/ARFF_fLZ07Q?si=1lyLkfLMjmceFqI5
 ### Testing the first version on original hardware:
 https://www.youtube.com/watch?v=AtZqVo_y_II
 
-#Credits
+# Credits
 * **Decompression:** Card decompression was performed using the `nedcmake` tools created by [caitsith2](https://www.caitsith2.com/ereader/devtools.htm/).
