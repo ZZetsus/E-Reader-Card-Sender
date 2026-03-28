@@ -20,7 +20,7 @@ include $(DEVKITARM)/gba_rules
 # the makefile is found
 #
 #---------------------------------------------------------------------------------
-TARGET		:= $(notdir $(CURDIR))
+TARGET		:= $(notdir $(CURDIR))_mb
 BUILD		:= build
 SOURCES		:= source
 INCLUDES	:= include

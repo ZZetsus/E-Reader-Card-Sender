@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 #define CARD_LIST_SIZE 5
+#define CHALLENGE_VALUE 0x29F6F106
 
 typedef struct {
     const uint32_t* data;
@@ -18,8 +19,6 @@ typedef struct {
 } CardEntry;
 
 extern const CardEntry card_list[];
-
-const uint32_t challenge_4bytes = 0x29F6F106;
 #ifdef __cplusplus
 }
 #endif

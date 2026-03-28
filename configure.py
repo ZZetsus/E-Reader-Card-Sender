@@ -14,7 +14,6 @@ BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 def crc32(CRC, chunk4byte):
     
     for i in range(4):
-
         byte = chunk4byte[i]
         index = (CRC ^ byte) & 0xff
         CRC = (CRC >> 8) ^ crc32Table_4bytes[index]
@@ -128,7 +127,11 @@ def generate_h_file(identifier_index):
         f.write("#ifndef CARDE\n#define CARDE\n\n#include <stdint.h>\n\n")
         f.write("#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n")
 
-        f.write(f"#define CARD_LIST_SIZE {identifier_index}\n\n")
+        f.write(f"#define CARD_LIST_SIZE {identifier_index}\n")
+
+        reversed_seed_candidate = challenge_4byte()
+        f.write(f"#define CHALLENGE_VALUE 0x{reversed_seed_candidate:08X}\n\n")
+        
         struct_header = (
             "typedef struct {\n"
             "    const uint32_t* data;\n"
@@ -142,11 +145,8 @@ def generate_h_file(identifier_index):
         f.write(struct_header)
 
         f.write(f"\n\nextern const CardEntry card_list[];")
-
-        reversed_seed_candidate = challenge_4byte()
-        f.write(f"\n\nconst uint32_t challenge_4bytes = 0x{reversed_seed_candidate:08X};\n")        
            
-        f.write("#ifdef __cplusplus\n}\n#endif\n\n#endif // CARDE")
+        f.write("\n#ifdef __cplusplus\n}\n#endif\n\n#endif // CARDE")
 
     print(f"file genered: source/carde_data.h")
 
