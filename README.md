@@ -1,5 +1,4 @@
 # Introduction
-This is still a prototype.
 It is a project to send data from Japanese e-reader+ Pokémon Colosseum Cards on physical hardware without the need to have any type of reader.
 ## *Note: You don't need a flashcart to run the ROM; you can use a GC/Wii program to send it via multiboot.*
 
