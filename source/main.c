@@ -10,7 +10,7 @@
 IWRAM_DATA uint32_t _GAMEID_REGION;
 IWRAM_DATA uint32_t _GAMEID_REGION_RECV;
 
-int region_index = 0;
+volatile int region_index = 0;
 volatile bool region_selected = false;
 
 const char* region_NAME[TOTAL_REGIONS] = {
@@ -38,7 +38,8 @@ const char* region_NAME[TOTAL_REGIONS] = {
 #define JOYCNT_RECEIVE_FLAG (1 << 1)
 #define JOYCNT_SEND_FLAG    (1 << 2)
 
-#define JOYSTAT_GPURPOSE5_FLAG (1 << 5)
+#define JOYSTAT_GPURPOSE5_FLAG4 (1 << 4)
+#define JOYSTAT_GPURPOSE5_FLAG5 (1 << 5)
 
 
 //CARDS INFO
@@ -116,7 +117,15 @@ void manejarEntrada() {
     if (keys & KEY_A) {
 
         label_card = card_list[index_list].label;
-        crc32_card = card_list[index_list].crc32;
+        
+        if (region_index == 0){
+            //USA
+            crc32_card = card_list[index_list].crc32_usa;
+        } else if (region_index == 1){
+            //JPN
+            crc32_card = card_list[index_list].crc32_jpn;
+        }
+        
         card_selected_size = card_list[index_list].size;
         card_data = card_list[index_list].data;
 
@@ -221,7 +230,6 @@ void chooseRegion() {
 
     if (keys & KEY_A) {
         region_selected = true;
-        limpiarConsola();
 
         if(region_index == 0){
             printf("\n Region selected: USA\n");
@@ -241,9 +249,6 @@ void chooseRegion() {
             challenge_4byte(GAMEID);
 
         }
-
-        printf("\n Hold B to back.\n");
-        printf("\n Wait for connection...\n");
 
     }
 }
@@ -307,6 +312,7 @@ IWRAM_CODE void _onSerial () {
         
         if (_REG_JOYCNT & JOYCNT_RECEIVE_FLAG){
             
+            
             GC_TICK = __builtin_bswap32(_REG_JOY_RECV);
             BYTE4_CHALLENGE = BYTE4_CHALLENGE ^ GC_TICK;
             prepare_word();
@@ -316,17 +322,24 @@ IWRAM_CODE void _onSerial () {
             _REG_JOYCNT |= JOYCNT_RECEIVE_FLAG;
 
         } else if (_REG_JOYCNT & JOYCNT_SEND_FLAG){
-
             respond_quickly();
-
-        } else {
-            printf("\nError!\n");
-            return;
         }
 
     } else if (_REG_JOYCNT & JOYCNT_RESET_FLAG) {
 
-        _REG_JOY_TRANS = 0x45364347;
+        if (_REG_JOYSTAT & JOYSTAT_GPURPOSE5_FLAG4){
+
+            reset_menu = true;
+            printf("\n Canceling...\n");
+
+            for(volatile int i = 0; i < 1000000; i++) {
+                __asm("nop"); 
+            }
+            
+            return;
+        }
+
+        _REG_JOY_TRANS = _GAMEID_REGION;
         _REG_JOYSTAT = 0x0000;
 
         //Reset flag 'reset bit 0'
@@ -347,7 +360,7 @@ IWRAM_CODE void _onSerial () {
             //65366367
 
             //General Purpose Flag bit 4
-            _REG_JOYSTAT |= (1 << 4);
+            _REG_JOYSTAT |= JOYSTAT_GPURPOSE5_FLAG4;
             _REG_JOYCNT |= JOYCNT_RECEIVE_FLAG;
 
             limpiarConsola();
@@ -362,10 +375,20 @@ IWRAM_CODE void _onSerial () {
                     _REG_JOYSTAT = 0x0020;
                     card_sending = true;
                     break;
-                } 
+                }
 
                 if (isBPressed()) {
-                    region_selected = false;
+                    reset_menu = true;
+
+                    printf("\n Canceling...\n");
+
+                    for(volatile int i = 0; i < 1000000; i++) {
+                        __asm("nop"); 
+                    }
+                    break;
+                }
+
+                if (_REG_JOYCNT & JOYCNT_RESET_FLAG){
                     break;
                 }
             }
@@ -374,7 +397,7 @@ IWRAM_CODE void _onSerial () {
             _REG_JOYSTAT = 0x0000;
 
             //Reset flag 'receive bit 1'
-            _REG_JOYCNT |= (1 << 1);
+            _REG_JOYCNT |= JOYCNT_RECEIVE_FLAG;
         }
     }  
 }
@@ -388,18 +411,22 @@ IWRAM_CODE void init(){
 
 }
 
-void init_var(){
-
+void reset_send_vars() {
     CRC32BYTE = crc32Table_4bytes[(MASK ^ 0x00000000) & 0xFF];
     new_mask = MASK >> 8 ^ CRC32BYTE;
     combined_mask = (new_mask << 0x18 | (new_mask & 0xFF00) << 8 | CRC32BYTE >> 0x18 | (new_mask & 0xFF0000) >> 8);
-    BYTE4_CHALLENGE = CHALLENGE_VALUE;
     byte_card_send = 0;
-    index_list = 0;
-    region_selected = false;
-    card_selected = false;
     card_sending = false;
+    index_list = 0;
 }
+
+void init_var(){
+
+    reset_send_vars();
+    card_selected = false;
+
+}
+
 
 IWRAM_CODE int main() {
 
@@ -423,6 +450,19 @@ IWRAM_CODE int main() {
             }
         }
 
+        limpiarConsola();
+        printf("\n Hold B to back.\n");
+        if (region_index == 0){
+            BYTE4_CHALLENGE = CHALLENGE_VALUE_USA;
+            printf("\n Selected region: USA\n");
+            
+        } else if (region_index == 1){
+            BYTE4_CHALLENGE = CHALLENGE_VALUE_JPN;
+            printf("\n Selected region: JAP\n");
+
+        }
+        printf("\n Wait for connection...\n");
+
         while (!card_selected) {
 
             if (region_selected){
@@ -431,14 +471,20 @@ IWRAM_CODE int main() {
             
             if (isBPressed()) {
                 reset_menu = true;
+                region_selected = false;
                 break;
+            }
+
+            if (reset_menu){
+                goto reset_menu_handle;
             }
 
         }
 
         if (reset_menu){
+            reset_menu_handle:
             reset_menu = false;
-            printf("\n Resetting...\n");
+            reset_send_vars();
             continue;
         }
         
@@ -450,7 +496,7 @@ IWRAM_CODE int main() {
         for(volatile int i = 0; i < 3000000; i++) {
             __asm("nop"); 
         }
-        
+
         VBlankIntrWait();
     }
 

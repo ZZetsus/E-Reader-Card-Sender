@@ -4,7 +4,8 @@ import subprocess
 
 from include_py.crc32_table import crc32Table_4bytes
 
-GAMEID = 0x47433645
+GAMEID_USA = 0x47433645
+GAMEID_JPN = 0x4743364A
 CHALLENGE_4BYTE_SEED = 0x00000000
 
 cards_metadata = []
@@ -20,14 +21,18 @@ def crc32(CRC, chunk4byte):
         
     return CRC
 
-def challenge_4byte ():
-    SEED_CANDIDATE = (GAMEID >> 8) ^ crc32Table_4bytes[(GAMEID ^ CHALLENGE_4BYTE_SEED) & 0xFF]
+def challenge_4byte_usa():
+    SEED_CANDIDATE = (GAMEID_USA >> 8) ^ crc32Table_4bytes[(GAMEID_USA ^ CHALLENGE_4BYTE_SEED) & 0xFF]
+    REVERSED_SEED_CANDIDATE = ((SEED_CANDIDATE << 0x18) & 0xFFFFFFFF) | (((SEED_CANDIDATE & 0xFF00) << 8) & 0xFFFFFFFF) | ((SEED_CANDIDATE & 0xFFFFFFFF) >> 0x18) | ((SEED_CANDIDATE & 0xFF0000) >> 8)
+    return REVERSED_SEED_CANDIDATE
+
+def challenge_4byte_jpn():
+    SEED_CANDIDATE = (GAMEID_JPN >> 8) ^ crc32Table_4bytes[(GAMEID_JPN ^ CHALLENGE_4BYTE_SEED) & 0xFF]
     REVERSED_SEED_CANDIDATE = ((SEED_CANDIDATE << 0x18) & 0xFFFFFFFF) | (((SEED_CANDIDATE & 0xFF00) << 8) & 0xFFFFFFFF) | ((SEED_CANDIDATE & 0xFFFFFFFF) >> 0x18) | ((SEED_CANDIDATE & 0xFF0000) >> 8)
     return REVERSED_SEED_CANDIDATE
 
 def convert_bins_to_cpp():
 
-    
     input_folder = os.path.join(BASE_PATH, 'e-cards', 'bin')
     output_file = os.path.join(BASE_PATH, 'source', 'carde_data.c')
     
@@ -70,11 +75,12 @@ def convert_bins_to_cpp():
             out.write(f"//{bin_file} (Offset 0x51, {real_elements} data bin + CRC + challenge byte)\n")
             out.write(f"const uint32_t {var_name}[{real_elements}] = {{\n")
             
-            CRC = GAMEID
-            
+            CRC_USA = GAMEID_USA
+            CRC_JPN = GAMEID_JPN
+
             for i in range(0, total_elements , 4):
 
-                if i < len(data):    
+                if i < len(data):
 
                     chunk = data[i:i+4]
 
@@ -87,29 +93,25 @@ def convert_bins_to_cpp():
                     else:
                         out.write(" ")
 
-                    CRC = crc32(CRC, chunk)
+                    CRC_USA = crc32(CRC_USA, chunk)
+                    CRC_JPN = crc32(CRC_JPN, chunk)
                 else: 
                     # print(f"i {i}\n")
     
                     chunk = b'\x00\x00\x00\x00'
-                    CRC = crc32(CRC, chunk)
+                    CRC_USA = crc32(CRC_USA, chunk)
+                    CRC_JPN = crc32(CRC_JPN, chunk)
 
             out.write("};\n\n")        
 
-            reversed_crc = struct.unpack('<I', struct.pack('>I', CRC))[0]
+            reversed_crc32_usa = struct.unpack('<I', struct.pack('>I', CRC_USA))[0]
+            reversed_crc32_jpn = struct.unpack('<I', struct.pack('>I', CRC_JPN))[0]
 
-            
-            # out.write(f"const uint32_t crc{var_name} = 0x{reversed_crc:08X}\n")
-
-            # out.write(f"const uint8_t {var_name}_index = {identifier_index};\n")
-
-            # out.write(f"const char {var_name}_label[30] = \"{var_name}\";\n\n")
-
-            card_meta_data += f'    {{ {var_name}, "{var_name}", 0x{reversed_crc:08X}, {identifier_index}, {real_elements}}},\n' 
+            card_meta_data += f'    {{ {var_name}, "{var_name}", 0x{reversed_crc32_usa:08X}, 0x{reversed_crc32_jpn:08X}, {identifier_index}, {real_elements}}},\n' 
             identifier_index += 1
 
         out.write("const CardEntry card_list[] = {\n")
-        out.write("// array_dir, label, crc32, index, size\n")
+        out.write("// array_dir, label, crc32_usa, crc32_jpn, index, size\n")
         out.write(card_meta_data)
         out.write("};\n\n")
         return identifier_index
@@ -129,14 +131,18 @@ def generate_h_file(identifier_index):
 
         f.write(f"#define CARD_LIST_SIZE {identifier_index}\n")
 
-        reversed_seed_candidate = challenge_4byte()
-        f.write(f"#define CHALLENGE_VALUE 0x{reversed_seed_candidate:08X}\n\n")
+        reversed_seed_candidate = challenge_4byte_usa()
+        f.write(f"#define CHALLENGE_VALUE_USA 0x{reversed_seed_candidate:08X}\n")
+
+        reversed_seed_candidate = challenge_4byte_jpn()
+        f.write(f"#define CHALLENGE_VALUE_JPN 0x{reversed_seed_candidate:08X}\n\n")
         
         struct_header = (
             "typedef struct {\n"
             "    const uint32_t* data;\n"
             "    const char* label;\n"
-            "    uint32_t crc32;\n"
+            "    uint32_t crc32_usa;\n"
+            "    uint32_t crc32_jpn;\n"
             "    int index;\n"
             "    int size;\n"
             "} CardEntry;"
